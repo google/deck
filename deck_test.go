@@ -17,7 +17,7 @@ package deck_test
 import (
 	"os"
 
-	"google3/third_party/go_deck/backends/logger/logger"
+	"github.com/google/deck/backends/logger"
 	"github.com/google/deck"
 )
 
