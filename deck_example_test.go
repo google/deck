@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package deck_example_test
+package deck_test
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"google3/third_party/go_deck/backends/logger/logger"
+	"github.com/google/deck/backends/logger"
 	"github.com/google/deck"
 )
 
