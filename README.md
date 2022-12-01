@@ -28,15 +28,15 @@ messages.
 When using the `A`ttribute-supporting log functions, the message isn't output
 immediately. We use the `With()` function to attach additional metadata to the
 message first. The metadata can be anything supported by an attached
-[backend](#backend). Once fully marked up with attributes, the `Go()` function
+[backend](#backends). Once fully marked up with attributes, the `Go()` function
 then performs the final write of the message.
 
 In this example, a log message is marked with *Verbosity* level 2.
-[Verbosity](#verbosity) can be used to dynamically show or hide log events at
+[Verbosity](#message-verbosity) can be used to dynamically show or hide log events at
 runtime.
 
 ```
-deck.InfoA("a verbose message").With(V(2)).Go()
+deck.InfoA("a verbose message").With(deck.V(2)).Go()
 ```
 
 The EventLog backend for Windows supports Event IDs:
@@ -48,10 +48,10 @@ deck.InfoA("a windows event").With(eventlog.EventID(123)).Go()
 Multiple attributes can be attributed to the same message:
 
 ```
-deck.InfoA("a verbose windows event").With(eventlog.EventID(123), V(3)).Go()
+deck.InfoA("a verbose windows event").With(eventlog.EventID(123), deck.V(3)).Go()
 ```
 
-## Backends {#backend}
+## Backends
 
 Deck's logging functionality revolves around **backends**. A backend is any
 logging destination that deck should write messages to. Backends are
@@ -69,7 +69,7 @@ from platform-specific source files.
 // my_app_windows.go
 
 func init() {
-  evt, err := eventlog.Init(appID)
+  evt, err := eventlog.Init("My App")
   if err != nil {
     panic(err)
   }
@@ -105,7 +105,7 @@ handles.
 
 The syslog backend is based on Go's core `syslog` package for Linux/Unix.
 
-## Message Verbosity {#verbosity}
+## Message Verbosity
 
 Verbosity is a special attribute implemented by the deck core package. The `V()`
 function decorates logs with a custom verbosity, and the `SetVerbosity()`
@@ -115,8 +115,8 @@ level to be changed at runtime, such as via a flag or setting.
 ```
 deck.SetVerbosity(*verbosityFlag)
 ...
-log.InfoA("a level one message").With(V(1)).Go()
-log.InfoA("a level three message").With(V(3)).Go()
+log.InfoA("a level one message").With(deck.V(1)).Go()
+log.InfoA("a level three message").With(deck.V(3)).Go()
 ```
 
 In this example, if verbosityFlag is 2 or lower, only *"a level one message"*
