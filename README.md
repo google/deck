@@ -59,6 +59,10 @@ plug-and-play, so you can reconfigure your application's logging behavior simply
 by adding and removing different backends.
 
 ```
+import (
+  "github.com/google/deck"
+  "github.com/google/deck/backends/logger"
+)
 deck.Add(logger.Init(os.Stdout, 0))
 ```
 
