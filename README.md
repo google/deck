@@ -110,6 +110,10 @@ handles.
 
 The syslog backend is based on Go's core `syslog` package for Linux/Unix.
 
+### discard Backend
+
+The discard backend discards all log events. Deck requires at least one backend to be registered to handle logs. To suppress all output, add the discard backend.
+
 ## Message Verbosity
 
 Verbosity is a special attribute implemented by the deck core package. The `V()`
