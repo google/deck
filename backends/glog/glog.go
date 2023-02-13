@@ -91,12 +91,16 @@ const depthOffset = 3
 // Write flushes the stored message to glog.
 func (m *message) Write() error {
 	if m.glogLevel != 0 {
-		log.V(m.glogLevel).InfoDepth(m.depth+depthOffset-1, m.message)
+		log.V(m.glogLevel).Info(m.message)
+		// TODO: convert to InfoDepth once glog adds it to V()
+		// log.V(m.glogLevel).InfoDepth(m.depth+depthOffset-1, m.message)
 		return nil
 	}
 	switch m.level {
 	case deck.DEBUG:
-		log.V(m.parent.opts.DebugLevel).InfoDepth(m.depth+depthOffset, m.message)
+		log.V(m.glogLevel).Info(m.message)
+		// TODO: convert to InfoDepth once glog adds it to V()
+		// log.V(m.parent.opts.DebugLevel).InfoDepth(m.depth+depthOffset, m.message)
 	case deck.INFO:
 		log.InfoDepth(m.depth+depthOffset, m.message)
 	case deck.WARNING:
