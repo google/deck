@@ -19,6 +19,7 @@ package eventlog
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/google/deck"
 	"golang.org/x/sys/windows/svc/eventlog"
@@ -30,6 +31,14 @@ type EventLog struct {
 }
 
 // Init initializes the EventLog backend for use in a deck.
+//
+// This version of Init does not automatically register the log source with Event Log. Log sources
+// only require registration once, and can be registered outside of the application code, such as
+// during software installation.
+//
+// If you want the backend to attempt registration, and your code is running with Administrator-level
+// permissions, use InitWithInstall or InitWithDefaultInstall. Keep in mind that these will make
+// (unnecessary) registration attempts each time the Init happens.
 func Init(source string) (*EventLog, error) {
 	hndl, err := eventlog.Open(source)
 	if err != nil {
@@ -38,6 +47,43 @@ func Init(source string) (*EventLog, error) {
 	return &EventLog{
 		handle: hndl,
 	}, nil
+}
+
+var (
+	allSources uint32 = eventlog.Info | eventlog.Warning | eventlog.Error
+)
+
+// InitWithDefaultInstall initializes the EventLog backend for use in a deck while also installing
+// the log source in the Windows registry.
+//
+// This method uses EventCreate.exe as the message file. EventCreate.exe is commonly available on
+// most versions of Windows but it does *not* export all possible event IDs! Events with high
+// ID numbers will render incorrectly in the event viewer using this message file.
+//
+// Registration of the source requires Administrator-level permissions.
+func InitWithDefaultInstall(source string) (*EventLog, error) {
+	if err := eventlog.InstallAsEventCreate(source, allSources); err != nil {
+		if !strings.Contains(err.Error(), "already exists") {
+			return nil, err
+		}
+	}
+	return Init(source)
+}
+
+// InitWithInstall initializes the EventLog backend for use in a deck while also installing the log
+// source in the Windows registry.
+//
+// This method requires the user to designate the message file. The message file must export all of
+// the Event IDs used by the application in order for them to render correctly in Event Viewer.
+//
+// Registration of the source requires Administrator-level permissions.
+func InitWithInstall(source string, messageFile string) (*EventLog, error) {
+	if err := eventlog.Install(source, messageFile, true, allSources); err != nil {
+		if !strings.Contains(err.Error(), "already exists") {
+			return nil, err
+		}
+	}
+	return Init(source)
 }
 
 // Close closes the EventLog backend.
