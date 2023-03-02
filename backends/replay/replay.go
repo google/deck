@@ -16,6 +16,8 @@
 package replay
 
 import (
+	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/google/deck"
@@ -36,6 +38,27 @@ func Init() *Replay {
 // Buffer aggregates message entries as they're written to the deck. Each Replay instance keeps
 // an internal Buffer, and returns copies of the Buffer to the user when queried.
 type Buffer []Entry
+
+// ContainsString searches the buffer for a string which contains str. This call uses strings.Contains
+// which will match on substrings in addition to full strings.
+func (b Buffer) ContainsString(str string) bool {
+	for _, a := range b {
+		if strings.Contains(a.Message, str) {
+			return true
+		}
+	}
+	return false
+}
+
+// ContainsRE searches the buffer for a message which matches the regular expression re.
+func (b Buffer) ContainsRE(re *regexp.Regexp) bool {
+	for _, a := range b {
+		if re.MatchString(a.Message) {
+			return true
+		}
+	}
+	return false
+}
 
 // Len returns the length of the buffer.
 func (b Buffer) Len() int { return len(b) }
@@ -68,6 +91,15 @@ func (r *Replay) byLevel(lvl deck.Level) Buffer {
 			out = append(out, a)
 		}
 	}
+	return out
+}
+
+// All returns all messages recorded to all levels.
+func (r *Replay) All() Buffer {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := make(Buffer, len(r.recorder))
+	copy(out, r.recorder)
 	return out
 }
 
