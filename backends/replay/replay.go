@@ -16,6 +16,7 @@
 package replay
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -68,6 +69,19 @@ func (b Buffer) Len() int { return len(b) }
 type Entry struct {
 	Level   deck.Level
 	Message string
+}
+
+// String stringifies Entry objects for nicer printing.
+func (e Entry) String() string {
+	levels := map[deck.Level]string{
+		deck.DEBUG:   "DEBUG",
+		deck.ERROR:   "ERROR",
+		deck.WARNING: "WARNING",
+		deck.INFO:    "INFO",
+		deck.FATAL:   "FATAL",
+		DEFAULT:      "DEFAULT",
+	}
+	return fmt.Sprintf("%s: %q", levels[e.Level], e.Message)
 }
 
 // Replay is a log deck backend that records log messages, allowing them to be replayed later.
