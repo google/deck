@@ -47,7 +47,7 @@ func TestContains(t *testing.T) {
 		desc   string
 		input  string
 		want   bool
-		fQuery func() Buffer
+		fQuery func() Bundle
 	}{
 		{
 			"error message hit",
@@ -111,7 +111,7 @@ func TestContainsRE(t *testing.T) {
 		desc   string
 		input  *regexp.Regexp
 		want   bool
-		fQuery func() Buffer
+		fQuery func() Bundle
 	}{
 		{
 			"error message miss full string",
@@ -165,35 +165,35 @@ func TestLevels(t *testing.T) {
 	tests := []struct {
 		desc   string
 		inputs []string
-		want   Buffer
+		want   Bundle
 		fIn    func(message ...any)
-		fOut   func() Buffer
+		fOut   func() Bundle
 	}{
 		{
 			"error messages",
 			[]string{"error message one", "another error"},
-			Buffer{Entry{deck.ERROR, "error message one"}, Entry{deck.ERROR, "another error"}},
+			Bundle{Log{deck.ERROR, "error message one"}, Log{deck.ERROR, "another error"}},
 			d.Error,
 			r.Error,
 		},
 		{
 			"info messages",
 			[]string{"info message one"},
-			Buffer{Entry{deck.INFO, "info message one"}},
+			Bundle{Log{deck.INFO, "info message one"}},
 			d.Info,
 			r.Info,
 		},
 		{
 			"warning messages",
 			[]string{"warning message one", "warning message two"},
-			Buffer{Entry{deck.WARNING, "warning message one"}, Entry{deck.WARNING, "warning message two"}},
+			Bundle{Log{deck.WARNING, "warning message one"}, Log{deck.WARNING, "warning message two"}},
 			d.Warning,
 			r.Warning,
 		},
 		{
 			"an empty set",
 			[]string{},
-			Buffer{},
+			Bundle{},
 			d.Warning,
 			r.Warning,
 		},

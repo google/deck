@@ -32,17 +32,17 @@ var (
 // Init initializes the replay backend for use in a deck.
 func Init() *Replay {
 	return &Replay{
-		recorder: Buffer{},
+		recorder: Bundle{},
 	}
 }
 
-// Buffer aggregates message entries as they're written to the deck. Each Replay instance keeps
-// an internal Buffer, and returns copies of the Buffer to the user when queried.
-type Buffer []Entry
+// Bundle aggregates message entries as they're written to the deck. Each Replay instance keeps
+// an internal Bundle, and returns copies of the Bundle to the user when queried.
+type Bundle []Log
 
-// ContainsString searches the buffer for a string which contains str. This call uses strings.Contains
+// ContainsString searches the Bundle for a string which contains str. This call uses strings.Contains
 // which will match on substrings in addition to full strings.
-func (b Buffer) ContainsString(str string) bool {
+func (b Bundle) ContainsString(str string) bool {
 	for _, a := range b {
 		if strings.Contains(a.Message, str) {
 			return true
@@ -51,8 +51,8 @@ func (b Buffer) ContainsString(str string) bool {
 	return false
 }
 
-// ContainsRE searches the buffer for a message which matches the regular expression re.
-func (b Buffer) ContainsRE(re *regexp.Regexp) bool {
+// ContainsRE searches the Bundle for a message which matches the regular expression re.
+func (b Bundle) ContainsRE(re *regexp.Regexp) bool {
 	for _, a := range b {
 		if re.MatchString(a.Message) {
 			return true
@@ -61,18 +61,18 @@ func (b Buffer) ContainsRE(re *regexp.Regexp) bool {
 	return false
 }
 
-// Len returns the length of the buffer.
-func (b Buffer) Len() int { return len(b) }
+// Len returns the length of the Bundle.
+func (b Bundle) Len() int { return len(b) }
 
-// Entry models a log entry as it's written to the buffer. It tracks the log message but also other
+// Log models a log entry as it's written to the Bundle. It tracks the log message but also other
 // metadata that we may want to recall later, like the deck Level.
-type Entry struct {
+type Log struct {
 	Level   deck.Level
 	Message string
 }
 
-// String stringifies Entry objects for nicer printing.
-func (e Entry) String() string {
+// String stringifies Log objects for nicer printing.
+func (e Log) String() string {
 	levels := map[deck.Level]string{
 		deck.DEBUG:   "DEBUG",
 		deck.ERROR:   "ERROR",
@@ -87,19 +87,19 @@ func (e Entry) String() string {
 // Replay is a log deck backend that records log messages, allowing them to be replayed later.
 type Replay struct {
 	mu       sync.Mutex
-	recorder Buffer
+	recorder Bundle
 }
 
-func (r *Replay) append(entry Entry) {
+func (r *Replay) append(entry Log) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.recorder = append(r.recorder, entry)
 }
 
-func (r *Replay) byLevel(lvl deck.Level) Buffer {
+func (r *Replay) byLevel(lvl deck.Level) Bundle {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	out := Buffer{}
+	out := Bundle{}
 	for _, a := range r.recorder {
 		if a.Level == lvl {
 			out = append(out, a)
@@ -109,36 +109,36 @@ func (r *Replay) byLevel(lvl deck.Level) Buffer {
 }
 
 // All returns all messages recorded to all levels.
-func (r *Replay) All() Buffer {
+func (r *Replay) All() Bundle {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	out := make(Buffer, len(r.recorder))
+	out := make(Bundle, len(r.recorder))
 	copy(out, r.recorder)
 	return out
 }
 
 // Debug returns all messages recorded to the debug level.
-func (r *Replay) Debug() Buffer {
+func (r *Replay) Debug() Bundle {
 	return r.byLevel(deck.DEBUG)
 }
 
 // Error returns all messages recorded to the error level.
-func (r *Replay) Error() Buffer {
+func (r *Replay) Error() Bundle {
 	return r.byLevel(deck.ERROR)
 }
 
 // Fatal returns all messages recorded to the fatal level.
-func (r *Replay) Fatal() Buffer {
+func (r *Replay) Fatal() Bundle {
 	return r.byLevel(deck.FATAL)
 }
 
 // Info returns all messages recorded to the info level.
-func (r *Replay) Info() Buffer {
+func (r *Replay) Info() Bundle {
 	return r.byLevel(deck.INFO)
 }
 
 // Warning returns all messages recorded to the warning level.
-func (r *Replay) Warning() Buffer {
+func (r *Replay) Warning() Bundle {
 	return r.byLevel(deck.WARNING)
 }
 
@@ -146,7 +146,7 @@ func (r *Replay) Warning() Buffer {
 func (r *Replay) Reset() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.recorder = Buffer{}
+	r.recorder = Bundle{}
 }
 
 // Close closes the replay backend.
@@ -167,17 +167,17 @@ func (r *Replay) New(lvl deck.Level, msg string) deck.Composer {
 func (m *message) Write() error {
 	switch m.level {
 	case deck.DEBUG:
-		m.parent.append(Entry{deck.DEBUG, m.message})
+		m.parent.append(Log{deck.DEBUG, m.message})
 	case deck.INFO:
-		m.parent.append(Entry{deck.INFO, m.message})
+		m.parent.append(Log{deck.INFO, m.message})
 	case deck.WARNING:
-		m.parent.append(Entry{deck.WARNING, m.message})
+		m.parent.append(Log{deck.WARNING, m.message})
 	case deck.ERROR:
-		m.parent.append(Entry{deck.ERROR, m.message})
+		m.parent.append(Log{deck.ERROR, m.message})
 	case deck.FATAL:
-		m.parent.append(Entry{deck.FATAL, m.message})
+		m.parent.append(Log{deck.FATAL, m.message})
 	default:
-		m.parent.append(Entry{DEFAULT, m.message})
+		m.parent.append(Log{DEFAULT, m.message})
 	}
 	return nil
 }
